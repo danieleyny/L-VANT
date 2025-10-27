@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="./assets/code/img/logo.png">
+    <title>LÉVANT | Elevated Renovation & Construction</title>
+    
+
+<!-- Tailwind config: put this BEFORE the CDN script -->
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          charcoal: '#121212',
+          'dark-gray': '#1E1E1E',
+          'accent-gold': '#E4B95B',
+          'accent-glow': 'rgba(228, 185, 91, 0.4)',
+        },
+        fontFamily: { sans: ['Inter','sans-serif'] },
+        keyframes: {
+          glow: {
+            '0%, 100%': { boxShadow: '0 0 10px #E4B95B, 0 0 20px #E4B95B' },
+            '50%':      { boxShadow: '0 0 5px  #E4B95B, 0 0 15px #E4B95B' }  // ✅ fixed color
+          },
+          spin: { '0%': {transform:'rotate(0deg)'}, '100%': {transform:'rotate(360deg)'} }
+        },
+        animation: {
+          glow: 'glow 3s infinite ease-in-out',
+          spin: 'spin 1s linear infinite'
+        }
+      }
+    }
+  }
+</script>
+
+<!-- Tailwind CDN: keep this after the config -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+
+
+
+    <style>
+
+        
+        /* === HERO BLUEPRINT BACKGROUND === */
+.hero-grid {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(1200px 700px at 90% 10%, rgba(228,185,91,.08), transparent 55%),
+    radial-gradient(900px 600px at 10% 90%, rgba(228,185,91,.06), transparent 50%),
+    #121212;
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.95), rgba(0,0,0,.4));
+}
+.hero-grid::before {
+  content:'';
+  position:absolute; inset:-200%;
+  background:
+    repeating-linear-gradient(to right, rgba(255,255,255,.04) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(to bottom, rgba(255,255,255,.04) 0 1px, transparent 1px 40px);
+  animation:gridFloat 32s linear infinite;
+  opacity:.28;
+}
+@keyframes gridFloat { to { transform:translateY(-40px); } }
+
+.hero-blueprint { position:absolute; inset:0; }
+.dash { stroke-dasharray:8 12; animation:dash 24s linear infinite; }
+@keyframes dash { to { stroke-dashoffset:-320; } }
+
+.hero-fade {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, rgba(18,18,18,0), rgba(18,18,18,.85));
+}
+
+
+        /* Basic Setup and Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            background-color: #121212; /* Deep Charcoal */
+            color: #E0E0E0; /* Light Gray text */
+            scroll-behavior: smooth;
+        }
+
+        /* 1. Reveal Animation Styles (Fade-in-on-Scroll) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transition-delay: var(--delay, 0s);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 2. Custom Card Hover Effect */
+        .card-hover {
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            will-change: transform, box-shadow;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            /* Updated shadow and border to use gold glow */
+            box-shadow: 0 15px 30px rgba(228, 185, 91, 0.15); 
+            border-color: #E4B95B;
+        }
+
+        /* 3. Button Glitch Effect on Hover (Subtle) */
+        .btn-glitch {
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .btn-glitch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.4s ease-out;
+            z-index: -1;
+        }
+        .btn-glitch:hover::after {
+            left: 100%;
+        }
+
+        /* Style for text area output (ensures proper display of pre-formatted text) */
+        #brief-output {
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* === BEFORE/AFTER SLIDER STYLES (FIXED) === */
+        .before-after-slider {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            aspect-ratio: 16/10; /* Maintain aspect ratio */
+            cursor: grab; /* Indicates the whole area is draggable */
+            user-select: none; /* Prevents text selection on drag */
+            -webkit-user-drag: none; /* Prevents image drag on webkit browsers */
+        }
+        .before-after-slider:active {
+            cursor: grabbing;
+        }
+
+        /* Both images must be absolutely positioned to perfectly stack */
+        .before-after-slider .before-img,
+        .before-after-slider .after-img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            user-select: none; 
+            -webkit-user-drag: none;
+        }
+
+        /* The container for the 'after' image is the clipping mask */
+        .after-image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%; /* Initial split (starts in the middle) */
+            height: 100%;
+            overflow: hidden;
+            z-index: 10; 
+        }
+
+        /* The 'after' image itself remains unclipped, only its container clips it */
+        .after-image-container .after-img {
+            position: absolute;
+            top: 0;
+            left: 0; 
+        }
+
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            left: 50%; /* Initial position (starts in the middle) */
+            width: 4px;
+            height: 100%;
+            background-color: #E4B95B; /* GOLD LINE */
+            cursor: grab; /* Handle has specific grab cursor */
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none; /* Crucial: Allows drag events attached to parent to pass through */
+        }
+        /* Override cursor for the entire slider when active */
+        .before-after-slider:active .slider-handle {
+             cursor: grabbing;
+        }
+
+        .slider-handle::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #E4B95B; /* GOLD CIRCLE */
+            border: 3px solid #121212; 
+            border-radius: 50%;
+            pointer-events: none; /* Ensures the circle doesn't interfere with parent events */
+            box-shadow: 0 0 15px rgba(228, 185, 91, 0.7); /* GOLD GLOW */
+        }
+        
+        /* Custom style for the canvas container to maintain aspect ratio */
+        #map-container {
+            position: relative;
+            padding-bottom: 60%; /* Aspect ratio 10:6, e.g., 600px height for 1000px width */
+            height: 0;
+            overflow: hidden;
+        }
+
+        #project-flow-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            /* Style the canvas background subtly */
+            background: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
+        }
+
+        /* Preloader Styles */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #b6ccd7; /* Your specified background color */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Ensure it's on top of everything */
+            opacity: 1;
+            transition: opacity 0.5s ease-out; /* Smooth fade out */
+        }
+
+        #preloader.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allows interaction with content beneath */
+        }
+
+        /* INCREASED LOGO SIZE AND RESPONSIVENESS */
+        #preloader img {
+            max-width: 320px; /* Adjusted to 320px (w-80) */
+            width: 80%; /* Ensure it scales down on very small screens */
+            height: auto;
+            margin-bottom: 2rem;
+        }
+
+        /* ADJUSTED SPINNER SIZE AND COLOR FOR VISIBILITY */
+        .spinner {
+            border: 5px solid #A0B0BC; /* Slightly darker shade of the background for contrast */
+            border-top: 5px solid #121212; /* Charcoal for the spinning part (high contrast) */
+            border-radius: 50%;
+            width: 60px; /* Increased size */
+            height: 60px; /* Increased size */
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    
+
+<div id="preloader">
+        
+
+<img src="./assets/img/logo.png" alt="LÉVANT Logo" class="w-80 h-auto"> 
+
+<div class="spinner"></div>
+    </div>
+
+    
+
+<header id="header" class="fixed top-0 left-0 right-0 z-50 bg-charcoal/80 backdrop-blur-sm shadow-xl transition-shadow duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            
+            
+
+<a href="#hero" class="flex items-center">
+                <img src="./assets/img/logo.png" alt="LÉVANT Logo" class="h-10 sm:h-12"> 
+
+</a>
+            
+            
+
+<nav class="space-x-4 md:space-x-8 hidden md:block">
+                <a href="#vision" class="text-white hover:text-accent-gold transition duration-300 relative group pb-1">
+                    Mastery
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-accent-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </a>
+                <a href="#transformations" class="text-white hover:text-accent-gold transition duration-300 relative group pb-1">
+                    Portfolio
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-accent-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </a>
+                <a href="#project-define" class="text-white hover:text-accent-gold transition duration-300 relative group pb-1">
+                    Briefing
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-accent-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </a>
+                <a href="#contact" class="text-white hover:text-accent-gold transition duration-300 relative group pb-1">
+                    Connect
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-accent-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                </a>
+            </nav>
+            
+            
+
+<button class="px-4 py-1.5 sm:px-5 sm:py-2 text-sm font-semibold text-charcoal bg-accent-gold rounded-full btn-glitch shadow-lg hover:shadow-accent-gold/50 transition-all duration-300">
+                Start Consultation
+            </button>
+        </div>
+    </header>
+
+    <main>
+        
+        
+
+<section id="hero" class="h-screen flex items-center justify-center pt-20 relative overflow-hidden bg-gradient-to-br from-charcoal to-dark-gray">
+  <!-- 🔹 background effect -->
+  <div aria-hidden="true" class="absolute inset-0 -z-10">
+    <div class="hero-grid"></div>
+
+    <!-- gold blueprint lines -->
+    <svg class="hero-blueprint" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+      <g stroke="#E4B95B" stroke-opacity=".18" fill="none" stroke-width="1">
+        <path class="dash" d="M120 200 L1080 200"/>
+        <path class="dash" d="M260 120 L260 720"/>
+        <path class="dash" d="M900 160 L900 680"/>
+        <polyline class="dash" points="160,580 420,470 740,540 1030,420"/>
+        <circle cx="160" cy="580" r="3" fill="#E4B95B" fill-opacity=".35"/>
+        <circle cx="420" cy="470" r="3" fill="#E4B95B" fill-opacity=".35"/>
+        <circle cx="740" cy="540" r="3" fill="#E4B95B" fill-opacity=".35"/>
+        <circle cx="1030" cy="420" r="3" fill="#E4B95B" fill-opacity=".35"/>
+      </g>
+    </svg>
+
+    <!-- dark fade to keep text readable -->
+    <div class="hero-fade"></div>
+  </div>
+
+  <!-- 🔹 your existing content -->
+  <div class="text-center max-w-4xl px-4 sm:px-6 reveal" style="--delay: 0.1s;">
+    <h1 class="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-4 tracking-tighter">
+      Crafting <span class="text-accent-gold">Structural</span> Excellence.
+    </h1>
+    <p class="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+      LÉVANT is the culmination of masterful contracting and bespoke renovation, delivering spaces defined by uncompromised quality and refined design.
+    </p>
+    <a href="#transformations" class="inline-block px-8 py-3 text-lg font-semibold text-accent-gold bg-dark-gray/50 border-2 border-accent-gold rounded-full btn-glitch shadow-2xl shadow-accent-gold/40 hover:bg-accent-gold hover:text-charcoal transition-all duration-300">
+      View Our Work
+    </a>
+  </div>
+</section>
+
+
+        
+
+<section id="vision" class="py-20 md:py-28 bg-dark-gray border-t border-b border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <header class="text-center mb-16 reveal" style="--delay: 0.2s;">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">Our Mastery Defined</h2>
+                    <p class="text-gray-500">The three pillars that hold every LÉVANT project together.</p>
+                </header>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    
+                    
+
+<div class="bg-charcoal p-6 md:p-8 rounded-2xl border border-gray-800 card-hover reveal" style="--delay: 0.3s;">
+                        
+
+<svg class="w-8 h-8 md:w-10 md:h-10 text-accent-gold mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2m-6 0h.01"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-3">Structural Integrity</h3>
+                        <p class="text-gray-400 text-sm md:text-base">We begin with a flawless foundation. All materials and methods meet the highest standards for durability and safety.</p>
+                    </div>
+
+                    
+
+<div class="bg-charcoal p-6 md:p-8 rounded-2xl border border-gray-800 card-hover reveal" style="--delay: 0.5s;">
+                        
+
+<svg class="w-8 h-8 md:w-10 md:h-10 text-accent-gold mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2m-3 13v-3m0-12v-3M5 8h4m-4 6h4m8-6h4m-4 6h4M3 12h18"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-3">Refined Design Synergy</h3>
+                        <p class="text-gray-400 text-sm md:text-base">A seamless blend of aesthetics and function. We work with leading architects to realize your vision without compromise.</p>
+                    </div>
+
+                    
+
+<div class="bg-charcoal p-6 md:p-8 rounded-2xl border border-gray-800 card-hover reveal" style="--delay: 0.7s;">
+                        
+
+<svg class="w-8 h-8 md:w-10 md:h-10 text-accent-gold mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 class="text-xl font-semibold text-white mb-3">Timely Project Mastery</h3>
+                        <p class="text-gray-400 text-sm md:text-base">Our project management ensures predictability. We deliver your high-end space on time, within budget, and to spec.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        
+
+<section id="transformations" class="py-20 md:py-28 bg-charcoal/50 border-t border-b border-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6">
+                <header class="text-center mb-16 reveal" style="--delay: 0.1s;">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">Our Transformations</h2>
+                    <p class="text-gray-500">Witness the art of LÉVANT's renovation. Drag the slider or click anywhere on the image to reveal the magic.</p>
+                </header>
+
+                
+
+<div class="before-after-slider reveal" style="--delay: 0.3s;">
+                    
+
+<img src="./assets/img/unrenovatedkitchen.jpg" alt="Before Old Kitchen" class="before-img" draggable="false" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/800x500/1e1e1e/e0e0e0?text=KITCHEN%20BEFORE'">
+                    
+                    <div class="after-image-container">
+                        
+
+<img src="./assets/img/renovatedkitchen.png" alt="After Modern Kitchen" class="after-img" draggable="false"
+                             onerror="this.onerror=null; this.src='https://placehold.co/800x500/e4b95b/121212?text=KITCHEN%20AFTER'">
+                    </div>
+                    <div class="slider-handle"></div>
+                </div>
+                <p class="text-center text-gray-400 mt-4 mb-16 reveal" style="--delay: 0.5s;">
+                    <span class="text-white font-semibold">Project 01:</span> Kitchen Modernization
+                </p>
+
+                
+
+<div class="before-after-slider reveal" style="--delay: 0.7s;">
+                    <img src="./assets/img/unrenovatedstairs.jpg" alt="Before Outdated Bathroom" class="before-img" draggable="false"
+                         onerror="this.onerror=null; this.src='https://placehold.co/800x500/1e1e1e/e0e0e0?text=STAIRS%20BEFORE'">
+                    <div class="after-image-container">
+                        <img src="./assets/img/renovatedstairs.png" alt="After Spa Master Bath" class="after-img" draggable="false"
+                             onerror="this.onerror=null; this.src='https://placehold.co/800x500/e4b95b/121212?text=STAIRS%20AFTER'">
+                    </div>
+                    <div class="slider-handle"></div>
+                </div>
+                <p class="text-center text-gray-400 mt-4 mb-16 reveal" style="--delay: 0.9s;">
+                    <span class="text-white font-semibold">Project 02:</span> Stair Revival
+                </p>
+
+                
+
+<div class="before-after-slider reveal" style="--delay: 1.1s;">
+                    <img src="./assets/img/unbuilthouse.png" alt="Before Dark Living Room" class="before-img" draggable="false"
+                         onerror="this.onerror=null; this.src='https://placehold.co/800x500/1e1e1e/e0e0e0?text=HOUSE%20BEFORE'">
+                    <div class="after-image-container">
+                        <img src="./assets/img/builthouse.png" alt="After Open Concept Space" class="after-img" draggable="false"
+                             onerror="this.onerror=null; this.src='https://placehold.co/800x500/e4b95b/121212?text=HOUSE%20AFTER'">
+                    </div>
+                    <div class="slider-handle"></div>
+                </div>
+                <p class="text-center text-gray-400 mt-4 mb-16 reveal" style="--delay: 1.3s;">
+                    <span class="text-white font-semibold">Project 03:</span> Design to Reality
+                </p>
+
+            </div>
+        </section>
+
+        
+
+<section id="interactive" class="py-20 md:py-28">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <header class="text-center mb-12 reveal" style="--delay:0.1s;">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">LÉVANT Smart Scope & Budget Estimator</h2>
+      <p class="text-gray-500">Get a high-level range and timeline in under a minute. Numbers shown are directional and refined during consultation.</p>
+    </header>
+
+    <div class="grid lg:grid-cols-3 gap-8 reveal" style="--delay:0.2s;">
+      <!-- Controls -->
+      <div class="lg:col-span-2 bg-dark-gray/60 p-6 md:p-8 rounded-2xl border border-gray-800">
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Project Type -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Project Type</label>
+            <select style="color: rgb(154, 153, 153);" id="est-type" class="w-full bg-charcoal border border-gray-700 rounded-xl px-4 py-3 text-gray-200">
+              <option value="kitchen">Kitchen Renovation</option>
+              <option value="bath">Primary Bathroom</option>
+              <option value="whole">Whole-Home (interior)</option>
+              <option value="addition">Addition / Extension</option>
+              <option value="exterior">Exterior / Facade</option>
+              <option value="backyard">Backyard Renovation (no pool)</option>
+            <option value="backyardpool">Backyard Renovation with Pool</option>
+
+            </select>
+          </div>
+
+          <!-- Finish Level -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Finish Level</label>
+            <select style="color: rgb(154, 153, 153);" id="est-level" class="w-full bg-charcoal border border-gray-700 rounded-xl px-4 py-3 text-gray-200">
+              <option value="premium">Premium</option>
+              <option value="luxury" selected>Luxury</option>
+              <option value="ultra">Ultra-Luxury</option>
+            </select>
+          </div>
+
+          <!-- Area -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Approx. Area (sq ft)</label>
+            <input style="color: rgb(154, 153, 153);" 
+  id="est-area" 
+  type="number" 
+  min="50" 
+  step="10" 
+  placeholder="250" 
+  class="w-full bg-charcoal border border-gray-700 rounded-xl px-4 py-3 text-gray-200">
+
+          </div>
+
+          <!-- Structural Complexity -->
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Structural Complexity</label>
+            <select style="color: rgb(154, 153, 153);" id="est-struct" class="w-full bg-charcoal border border-gray-700 rounded-xl px-4 py-3 text-gray-200">
+              <option value="light">Light (cosmetic)</option>
+              <option value="moderate" selected>Moderate (some MEP / layout)</option>
+              <option value="heavy">Heavy (moving walls/steel)</option>
+            </select>
+          </div>
+
+          <!-- Timeline priority -->
+          <div class="md:col-span-2">
+            <label class="block text-sm text-gray-400 mb-2">Timeline Priority <span class="text-gray-500">(Speed vs. Cost)</span></label>
+            <input id="est-speed" type="range" min="0" max="100" value="35" class="w-full accent-[#E4B95B]">
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Value</span><span>Balanced</span><span>Fast-Track</span>
+            </div>
+          </div>
+
+          <!-- Extras -->
+          <div class="md:col-span-2 grid sm:grid-cols-3 gap-3">
+            <label class="flex items-center gap-3 bg-charcoal/60 border border-gray-700 rounded-xl px-4 py-3">
+  <input id="x-millwork" type="checkbox" class="accent-[#E4B95B]">
+  <span id="lab-mill" class="text-sm text-gray-300">Custom Millwork</span>
+</label>
+
+<label class="flex items-center gap-3 bg-charcoal/60 border border-gray-700 rounded-xl px-4 py-3">
+  <input id="x-smart" type="checkbox" class="accent-[#E4B95B]">
+  <span id="lab-smart" class="text-sm text-gray-300">Smart-Home / AV</span>
+</label>
+
+<label class="flex items-center gap-3 bg-charcoal/60 border border-gray-700 rounded-xl px-4 py-3">
+  <input id="x-landscape" type="checkbox" class="accent-[#E4B95B]">
+  <span id="lab-land" class="text-sm text-gray-300">Landscaping & Garden Design</span>
+</label>
+
+
+          </div>
+        </div>
+
+        <button id="est-calc"
+          class="mt-6 px-6 py-3 font-semibold text-charcoal bg-accent-gold rounded-full btn-glitch hover:bg-white transition-all duration-300 shadow-xl">
+          Calculate Estimate
+        </button>
+      </div>
+
+      <!-- Output -->
+      <div class="bg-charcoal p-6 md:p-8 rounded-2xl border border-gray-800">
+        <p class="text-sm text-gray-500 mb-2">Estimated Investment</p>
+        <div id="est-price" class="text-3xl md:text-4xl font-extrabold text-accent-gold">$—</div>
+
+        <div class="mt-6 border-t border-gray-800 pt-6">
+          <p class="text-sm text-gray-500 mb-2">Estimated Build Timeline</p>
+          <div id="est-time" class="text-xl text-gray-200">—</div>
+        </div>
+
+        <div class="mt-6 border-t border-gray-800 pt-6">
+          <p class="text-sm text-gray-500 mb-2">Scope Summary</p>
+          <div id="est-scope" class="text-sm text-gray-300 leading-6">
+            Select options and click “Calculate Estimate”.
+          </div>
+        </div>
+
+        <button id="est-cta"
+          class="mt-8 w-full px-6 py-3 font-semibold text-charcoal bg-accent-gold rounded-full btn-glitch hover:bg-white transition-all duration-300 shadow-xl">
+          Book a Site Visit
+        </button>
+        <p class="text-[11px] text-gray-500 mt-3">*Figures are planning ranges. Final proposal follows site conditions, drawings, and selections.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+   
+                    
+
+
+        
+
+<section id="contact" class="py-20 md:py-28 bg-charcoal/50 border-t border-gray-800">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center reveal" style="--delay: 0.1s;">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Start Your Transformation with LÉVANT</h2>
+                <p class="text-lg md:text-xl text-gray-400 mb-10">Your next project demands flawless execution. Schedule a zero-obligation consultation to discuss the scope of your vision.</p>
+                <button class="px-10 py-4 text-xl font-bold text-charcoal bg-accent-gold rounded-full btn-glitch shadow-2xl shadow-accent-gold/40 hover:shadow-white/30 transition-all duration-500 animate-glow">
+                    Schedule Consultation
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    
+
+<footer class="py-10 bg-charcoal border-t border-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center text-gray-500 text-xs sm:text-sm">
+            <p>&copy; 2025 LÉVANT Contracting. Structural Excellence. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // === JAVASCRIPT FOR ELEVATED EXPERIENCE ===
+
+        // Global variable for API key (ensure this is securely managed in a real deployment)
+        const apiKey = typeof __api_key !== 'undefined' ? __api_key : '';
+        const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
+
+        // Utility for exponential backoff during API calls
+        async function exponentialBackoffFetch(url, options, maxRetries = 5) {
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) { 
+                        return response;
+                    }
+                    console.warn(`Rate limit hit (429). Retrying in ${Math.pow(2, attempt)}s...`);
+                } catch (error) {
+                    console.error(`Fetch failed on attempt ${attempt + 1}:`, error);
+                    if (attempt === maxRetries - 1) throw error;
+                }
+
+                if (attempt < maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                }
+            }
+            throw new Error('API request failed after multiple retries.');
+        }
+
+        // 1. Content Reveal on Scroll Logic
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.2 // Element visible by 20%
+        };
+
+        const observerCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+        revealElements.forEach(el => {
+            observer.observe(el);
+        });
+        
+
+// --- LÉVANT Estimator Logic — Dynamic Version ---
+(function () {
+  const $ = (id) => document.getElementById(id);
+
+  // Inputs
+  const estType   = $('est-type');
+  const estLevel  = $('est-level');
+  const estArea   = $('est-area');
+  const estStruct = $('est-struct');
+  const estSpeed  = $('est-speed');
+
+  const xMill     = $('x-millwork');
+  const xSmart    = $('x-smart');
+  const xLand     = $('x-landscape');
+
+  // Dynamic labels
+  const labMill   = $('lab-mill');
+  const labSmart  = $('lab-smart');
+  const labLand   = $('lab-land');
+
+  // Outputs
+  const outPrice  = $('est-price');
+  const outTime   = $('est-time');
+  const outScope  = $('est-scope');
+
+  // Button (kept, but we also recalc live)
+  const btnCalc   = $('est-calc');
+
+  // Cost baselines ($/sf)
+  const BASE = {
+    kitchen:      { premium: 450, luxury: 700,  ultra: 950 },
+    bath:         { premium: 400, luxury: 650,  ultra: 900 },
+    whole:        { premium: 250, luxury: 375,  ultra: 525 },
+    addition:     { premium: 325, luxury: 500,  ultra: 700 },
+    exterior:     { premium: 110, luxury: 175,  ultra: 260 },
+    backyard:     { premium: 150, luxury: 225,  ultra: 325 }, // no pool
+    backyardpool: { premium: 250, luxury: 400,  ultra: 575 }  // with pool
+  };
+
+  // Default area presets + min per type (for UX)
+  const AREA_PRESET = {
+    kitchen: 250, bath: 80, whole: 1500, addition: 500, exterior: 400,
+    backyard: 800, backyardpool: 1000
+  };
+  const AREA_MIN = {
+    kitchen: 120, bath: 40, whole: 600, addition: 200, exterior: 150,
+    backyard: 300, backyardpool: 500
+  };
+
+  // Structural multipliers
+  const STRUCT = { light: 1.00, moderate: 1.15, heavy: 1.35 };
+
+  // Timeline base (weeks)
+  const BASE_WEEKS = {
+    kitchen: 10, bath: 8, whole: 20, addition: 24, exterior: 6,
+    backyard: 8, backyardpool: 12
+  };
+
+  // Dynamic extras (labels + flat adders) by type group
+  const EXTRAS = {
+    interior: {
+      mill:  { label: 'Custom Millwork',                 add: 15000 },
+      smart: { label: 'Smart-Home / AV',                 add: 10000 },
+      land:  { label: 'Decorative Lighting Package',     add:  4000 }
+    },
+    yardNoPool: {
+      mill:  { label: 'Outdoor Kitchen / Built-ins',     add: 20000 },
+      smart: { label: 'Smart Irrigation & Lighting',     add:  8000 },
+      land:  { label: 'Landscaping & Garden Design',     add: 12000 }
+    },
+    yardPool: {
+      mill:  { label: 'Outdoor Kitchen / Built-ins',     add: 24000 },
+      smart: { label: 'Smart Irrigation & Lighting',     add:  9000 },
+      land:  { label: 'Landscaping, Trees & Planting',   add: 18000 }
+    }
+  };
+
+  function typeGroup(key) {
+    if (key === 'backyard')     return 'yardNoPool';
+    if (key === 'backyardpool') return 'yardPool';
+    return 'interior';
+  }
+
+  function speedMult(v) {
+    if (v <= 35) return 1.00 - (35 - v) * 0.002; // value
+    return 1.00 + (v - 35) * 0.003;              // fast-track
+  }
+
+  function toUSD(n){ return n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}); }
+
+  function applyDynamicUI() {
+    const t = estType.value;
+
+    // Area placeholder / min
+    estArea.placeholder = AREA_PRESET[t];
+    if (!estArea.value) estArea.value = AREA_PRESET[t];
+    estArea.min = AREA_MIN[t];
+
+    // Structural label context (optional text tweak)
+    estStruct.options[0].text = (t.startsWith('backyard') || t==='exterior')
+      ? 'Light (hardscape/planting)'
+      : 'Light (cosmetic)';
+
+    // Re-label add-ons + keep their checked state (don’t reset user choice)
+    const group = EXTRAS[typeGroup(t)];
+    labMill.textContent  = group.mill.label;
+    labSmart.textContent = group.smart.label;
+    labLand.textContent  = group.land.label;
+
+    // Enable all controls (but you could disable irrelevant ones here if desired)
+  }
+
+  function extrasAdders() {
+    const g = EXTRAS[typeGroup(estType.value)];
+    let add = 0;
+    if (xMill.checked)  add += g.mill.add;
+    if (xSmart.checked) add += g.smart.add;
+    if (xLand.checked)  add += g.land.add;
+    return add;
+  }
+
+  function estimate() {
+    const t   = estType.value;
+    const lv  = estLevel.value;
+    const sf  = Math.max(Number(estArea.min||50), Number(estArea.value||0));
+    const base = BASE[t][lv];
+
+    const structM = STRUCT[estStruct.value];
+    const speedM  = speedMult(Number(estSpeed.value));
+
+    const mid = sf * base * structM * speedM + extrasAdders();
+    const low = mid * 0.88;
+    const hi  = mid * 1.12;
+
+    const baseWeeks = BASE_WEEKS[t];
+    const sizeFactor = Math.min(12, Math.ceil(sf / 250)) - 1;
+    const structWeeks = { light: 0, moderate: 2, heavy: 6 }[estStruct.value];
+    const speedAdj = (Number(estSpeed.value) > 35 ? -2 : Number(estSpeed.value) < 35 ? +2 : 0);
+    const wLow = Math.max(4, baseWeeks + sizeFactor + structWeeks + speedAdj);
+    const wHigh = wLow + 3;
+
+    outPrice.textContent = `${toUSD(low)} – ${toUSD(hi)}`;
+    outTime.textContent  = `${wLow}–${wHigh} weeks`;
+
+    // Scope summary (dynamic phrasing)
+    const typeText = estType.options[estType.selectedIndex].text;
+    const bullets = [
+      `Project: ${typeText}`,
+      `Finish Level: ${estLevel.options[estLevel.selectedIndex].text}`,
+      `Approx. Area: ${sf} sq ft`,
+      `Complexity: ${estStruct.options[estStruct.selectedIndex].text}`,
+      xMill.checked  ? labMill.textContent  : null,
+      xSmart.checked ? labSmart.textContent : null,
+      xLand.checked  ? labLand.textContent  : null
+    ].filter(Boolean);
+
+    outScope.innerHTML = `
+      <ul class="list-disc list-inside space-y-1">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+      <p class="mt-3 text-[12px] text-gray-500">
+        Ranges include GC management, trade labor, permits/expediter (typical), and allowances in line with finish level. 
+        Final proposal follows site conditions, drawings, and selections.
+      </p>`;
+  }
+
+  function onChange() { applyDynamicUI(); estimate(); }
+
+  // Live listeners (so it updates instantly)
+  [estType, estLevel, estArea, estStruct, estSpeed, xMill, xSmart, xLand].forEach(el => {
+    if (!el) return;
+    const evt = (el.tagName === 'INPUT' && el.type === 'range') ? 'input' : 'change';
+    el.addEventListener(evt, onChange);
+  });
+
+  if (btnCalc) btnCalc.addEventListener('click', estimate);
+
+  // Initial paint
+  applyDynamicUI();
+  estimate();
+})();
+
+
+
+
+
+        // 3. Before & After Image Slider Logic (FIXED for area dragging)
+        document.querySelectorAll('.before-after-slider').forEach(slider => {
+            const afterImageContainer = slider.querySelector('.after-image-container');
+            const handle = slider.querySelector('.slider-handle');
+            
+            let isDragging = false;
+
+            const updateSlider = (x) => {
+                const rect = slider.getBoundingClientRect();
+                let clientX = x;
+
+                // Clamp x position within the slider bounds
+                if (clientX < rect.left) {
+                    clientX = rect.left;
+                } else if (clientX > rect.right) {
+                    clientX = rect.right;
+                }
+
+                const offset = clientX - rect.left;
+                const percentage = (offset / rect.width); // 0.0 to 1.0 value (0% to 100%)
+
+                // Set the width of the clipping container
+                afterImageContainer.style.width = `${percentage * 100}%`;
+                
+                // Set the position of the handle
+                handle.style.left = `${percentage * 100}%`;
+            };
+            
+            // --- Event Handlers ---
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                // Use clientX for mouse, touches[0].clientX for touch
+                const x = e.clientX || e.touches[0].clientX;
+                e.preventDefault(); 
+                updateSlider(x);
+            };
+
+            const onEnd = () => {
+                isDragging = false;
+                slider.classList.remove('grabbing');
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
+            };
+
+            const onStart = (e) => {
+                // Determine the correct client X coordinate (mouse or touch)
+                const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+                
+                if (clientX === null) return;
+
+                isDragging = true;
+                slider.classList.add('grabbing');
+                e.preventDefault(); 
+                
+                // Update slider immediately to the click/touch position
+                updateSlider(clientX);
+
+                // Attach global listeners for movement
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            };
+
+            // Attach listeners to the entire slider container
+            slider.addEventListener('mousedown', onStart);
+            slider.addEventListener('touchstart', onStart, { passive: false });
+
+
+            // Initialize slider position (center it at 50%)
+            const initialX = slider.getBoundingClientRect().left + slider.getBoundingClientRect().width / 2;
+            updateSlider(initialX);
+
+            // Re-initialize on window resize to maintain center position and handle size changes
+            window.addEventListener('resize', () => {
+                const resizeX = slider.getBoundingClientRect().left + slider.getBoundingClientRect().width / 2;
+                updateSlider(resizeX);
+            });
+        });
+
+
+        // 4. Gemini API: Project Brief Generator Logic
+        async function generateBrief() {
+            const room = document.getElementById('project-room').value;
+            const style = document.getElementById('project-style').value;
+            const details = document.getElementById('project-details').value;
+            const briefOutput = document.getElementById('brief-output');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const briefContainer = document.getElementById('brief-output-container');
+            const generateBtn = document.getElementById('generate-brief-btn');
+
+            if (!room || !style) {
+                // Provide visual feedback without using alert()
+                briefOutput.textContent = 'Error: Please fill in the Renovation Area and Desired Style fields.';
+                briefContainer.classList.remove('hidden');
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            briefContainer.classList.add('hidden');
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+
+            const systemPrompt = `You are a professional architectural and renovation consultant for a high-end firm named LÉVANT. Your task is to take informal client input and transform it into a structured, professional project brief suitable for a contractor consultation. The brief must be formal, confident, and focus on both design intent and practical execution. Only output the brief text, do not include any introductory or closing sentences or salutations. Format the output with clear headings and bullet points for readability.`;
+
+            const userQuery = `Create a project brief for a renovation project based on the following details:
+Project Area: ${room}
+Desired Style: ${style}
+Specific Requirements/Notes: ${details || 'None provided.'}`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await exponentialBackoffFetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    briefOutput.textContent = generatedText;
+                    briefContainer.classList.remove('hidden');
+                } else {
+                    briefOutput.textContent = 'Error: Could not generate brief. The model returned no text.';
+                    briefContainer.classList.remove('hidden');
+                    console.error('API Response Error:', result);
+                }
+
+            } catch (error) {
+                briefOutput.textContent = 'A network error occurred. Please check your connection and try again.';
+                briefContainer.classList.remove('hidden');
+                console.error('API Call Failed:', error);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generateBtn.disabled = false;
+                generateBtn.textContent = '✨ Generate LÉVANT Brief';
+            }
+        }
+
+
+        // Event listener setup for DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const generateBtn = document.getElementById('generate-brief-btn');
+            const copyBtn = document.getElementById('copy-brief-btn');
+            const preloader = document.getElementById('preloader');
+
+            // Hide preloader once everything is loaded
+            window.addEventListener('load', () => {
+                preloader.classList.add('hidden'); // Start fade-out
+                // Optional: remove from DOM after transition to ensure no click issues
+                preloader.addEventListener('transitionend', () => {
+                    preloader.style.display = 'none';
+                }, { once: true });
+            });
+
+
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generateBrief);
+            }
+            
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    const briefText = document.getElementById('brief-output').textContent;
+                    const textArea = document.createElement('textarea');
+                    textArea.value = briefText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        // Use document.execCommand('copy') for better compatibility in iFrames
+                        document.execCommand('copy');
+                        const copyMessage = document.getElementById('copy-message');
+                        copyMessage.classList.remove('opacity-0');
+                        copyMessage.classList.add('opacity-100');
+                        setTimeout(() => {
+                            copyMessage.classList.remove('opacity-100');
+                            copyMessage.classList.add('opacity-0');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                    document.body.removeChild(textArea);
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
